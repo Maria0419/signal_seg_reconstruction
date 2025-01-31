@@ -1,0 +1,15 @@
+dataset/
+extra/
+dataset_interpooled/
+*.pth
+*.txt
+dataset_reconstructed/
+test.py
+matlab/lr.py
+*.csv
+matlab/rename.m
+test/
+nfold1_out/
+nfold1unet_out/
+*.asv
+nfold1*/

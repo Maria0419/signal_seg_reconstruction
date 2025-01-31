@@ -144,7 +144,7 @@ class SignalDataset(Dataset):
 
 #----------------------------------------------------------
 
-
+'''
 data_path = '../signal_segmentation/dataset'
 
 data2 = SignalDataset(data_path, data_type='train', noise=0.025, nfold=1)
@@ -163,3 +163,4 @@ print(len(data.data_list))
 #cv2.imshow('Image', data.__getitem__(0)[0])
 #cv2.imshow('Label', label.data_list[0])
 
+'''

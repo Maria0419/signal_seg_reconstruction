@@ -35,7 +35,7 @@ def train(args):
 	num_batches += np.ceil(len(test_data)/num_batch).astype('int')
 
 	# create model
-	model = UNetResNet(nfilter).to(DEVICE)
+	model = UNETDD().to(DEVICE)
 
 	train_loader = DataLoader(train_data, batch_size=num_batch, num_workers=num_workers, shuffle=True) 
 	test_loader = DataLoader(test_data, batch_size=num_batch, num_workers=num_workers)
@@ -133,7 +133,7 @@ def test(args):
 
 	num_batches = np.ceil(len(test_data)/num_batch).astype('int')
 
-	model = UNET().to(DEVICE)
+	model = UNETDD().to(DEVICE)
 
 	# load model
 	checkpoint = torch.load(args.model_file)
@@ -210,7 +210,7 @@ def info(args):
 if __name__ == "__main__":
 
 	os.system('cls')
-	print('UNET-ResNet v')
+	print('UNETDD v')
 
 	parser = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=32), epilog='\nFor more information, please check README.md\n', exit_on_error=False)
 	parser._optionals.title = 'command arguments'

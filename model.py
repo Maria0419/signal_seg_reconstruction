@@ -138,7 +138,7 @@ def save_model(filename, model, optimizer,history, suffix=None):
 	torch.save(checkpoint, filename)
 
 #----------------------------------------------------------
-
+'''
 if __name__ == '__main__':
     input_image = torch.rand((1, 8, 1024, 128))
     model = UNETDD()
@@ -151,3 +151,4 @@ if __name__ == '__main__':
     output1, output2 = model(input_image)
     print(output1.shape)
     print(output2.shape)
+'''

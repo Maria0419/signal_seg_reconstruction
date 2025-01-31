@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [    
+        {
+            "name": "MAIN_DD",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-job=TRAIN",
+                "-data_path=../signal_segmentation/dataset",
+                "-test_path=../signal_segmentation/dataset", 
+                "-num_epoch=100", 
+                "-nfold=1",
+                "-model_file=nfold1.pth",
+                "-log_file=nfold1.txt"
+            ]
+        },
+        {
+            "name": "TEST_DD",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-job=TEST",
+                "-data_path=dataset",
+                "-test_path=nfold1c4lr5e6_out",
+                "-nfold=1", 
+                "-model_file=nfold1c4lr5e6_out/nfold1c4lr5e6.pth"
+            ]
+        }
+    ]
+}
