@@ -28,10 +28,10 @@
             "console": "integratedTerminal",
             "args": [
                 "-job=TEST",
-                "-data_path=dataset",
-                "-test_path=nfold1c4lr5e6_out",
+                "-data_path=../signal_segmentation/dataset",
+                "-test_path=nfold1_out",
                 "-nfold=1", 
-                "-model_file=nfold1c4lr5e6_out/nfold1c4lr5e6.pth"
+                "-model_file=nfold1_out/nfold1.pth"
             ]
         }
     ]

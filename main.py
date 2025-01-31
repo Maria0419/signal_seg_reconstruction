@@ -16,7 +16,9 @@ min_learning_rate = 1e-4
 lambda1 = lambda epochs: max(0.98 ** epochs, min_learning_rate/learning_rate)
 save_frequency = 10
 nfilter = 64
-pixels = 256
+load_first = False
+alpha = 0.5
+
 
 augment_noise = 0.025
 
@@ -26,8 +28,8 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def train(args):
 	# load dataset
-	train_data = SignalDataset(args.data_path, 'train', noise=augment_noise, nfold=args.nfold) 
-	test_data = SignalDataset(args.data_path, 'test', nfold=args.nfold)
+	train_data = SignalDataset(args.data_path, 'train', noise=augment_noise, nfold=args.nfold, load_first=load_first) 
+	test_data = SignalDataset(args.data_path, 'test', nfold=args.nfold, load_first=load_first)
 
 	print('Training data:', len(train_data), 'Testing data:', len(test_data))
 	
@@ -73,7 +75,7 @@ def train(args):
 			optimizer.zero_grad(set_to_none=True)
 
 			output1, output2 = model(signals)
-			train_loss = dice_loss(output1, labels) + (mse(output2, images))
+			train_loss = ((1-alpha)*dice_loss(output1, labels)) + (alpha*mse(output2, images))
 			train_loss.backward()
 			optimizer.step()
 
@@ -97,7 +99,7 @@ def train(args):
 				images = images.to(DEVICE)
 
 				output1, output2 = model(signals)
-				test_loss = dice_loss(output1, labels) + mse(output2, images)
+				test_loss = ((1-alpha)*dice_loss(output1, labels)) + (alpha*mse(output2, images))
 
 				test_running_loss += test_loss.item()
 
@@ -142,6 +144,7 @@ def test(args):
 
 	test_loader = DataLoader(test_data, batch_size=num_batch, num_workers=num_workers)
 
+	mse = nn.MSELoss(reduction='mean')
 	model.eval()
 	test_running_loss = 0.0
 	loss = []
@@ -155,17 +158,22 @@ def test(args):
 			images = images.to(DEVICE)
 
 			output1, output2 = model(signals)
-			test_loss = dice_loss(output1, labels)
+			test_loss = dice_loss(output1, labels) + mse(output2, images)
 			loss.append(test_loss)
 			test_running_loss += test_loss.item()
 
-			for j in range(output.shape[0]):
-				img_tensor = output[j]
+			for j in range(output1.shape[0]):
+				label_tensor = output1[j]
+				label = label_tensor.permute(1,2,0).cpu().numpy() 
+				label = (label*255).astype(np.uint8)
+
+				img_tensor = output2[j]
 				img = img_tensor.permute(1,2,0).cpu().numpy() 
 				img = (img*255).astype(np.uint8)
 
 				#cv2.imshow(f'image{i+1}',img)
-				cv2.imwrite(f'{args.test_path}/output{i+1:04d}.png', img)
+				cv2.imwrite(f'{args.test_path}/output{i+1:04d}_label.png', label)
+				cv2.imwrite(f'{args.test_path}/output{i+1:04d}_image.png', img)
 				#cv2.waitKey(0)
 
 		with open(f'{args.test_path}/loss.csv', 'w') as file:
