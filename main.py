@@ -8,17 +8,17 @@ from data import *
 
 #==========================================================
 
-num_batch = 5
+num_batch = 20
 num_workers = 4
 
 learning_rate = 1e-3
 min_learning_rate = 1e-4
-lambda1 = lambda epochs: max(0.98 ** epochs, min_learning_rate/learning_rate)
+lambda1 = lambda epochs: max(0.97 ** epochs, min_learning_rate/learning_rate)
 save_frequency = 10
 nfilter = 64
-load_first = False
-alpha = 0.5
-
+load_first = True
+alpha = 2
+beta = 1
 
 augment_noise = 0.025
 
@@ -79,7 +79,7 @@ def train(args):
 			output1, output2 = model(signals)
 			tdice = dice_loss(output1, labels)
 			tmse = mse(output2, images)
-			train_loss = ((1-alpha)*tdice) + (alpha*tmse)
+			train_loss = ((beta)*tdice) + (alpha*tmse)
 			train_loss.backward()
 			optimizer.step()
 
@@ -109,7 +109,7 @@ def train(args):
 				output1, output2 = model(signals)
 				ttdice = dice_loss(output1, labels)
 				ttmse = mse(output2, images)
-				test_loss = ((1-alpha)*ttdice) + (alpha*ttmse)
+				test_loss = ((beta)*ttdice) + (alpha*ttmse)
 
 				test_running_loss += test_loss.item()
 				test_dice += ttdice.item()
@@ -179,7 +179,7 @@ def test(args):
 
 			ttdice = dice_loss(output1, labels)
 			ttmse = mse(output2, images)
-			test_loss = ((1-alpha)*ttdice) + (alpha*ttmse)
+			test_loss = ((beta)*ttdice) + (alpha*ttmse)
 
 			test_running_loss += test_loss.item()
 			test_dice += ttdice.item()
