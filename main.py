@@ -97,7 +97,7 @@ def train(args):
 				images = images.to(DEVICE)
 
 				output1, output2 = model(signals)
-				train_loss = dice_loss(output1, labels) + mse(output2, images)
+				test_loss = dice_loss(output1, labels) + mse(output2, images)
 
 				test_running_loss += test_loss.item()
 
