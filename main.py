@@ -8,7 +8,7 @@ from data import *
 
 #==========================================================
 
-num_batch = 1
+num_batch = 5
 num_workers = 4
 
 learning_rate = 1e-3
@@ -47,7 +47,7 @@ def train(args):
 
 	mse = nn.MSELoss(reduction='mean')
 
-	history = {'train_loss':[], 'test_loss':[], 'toc':[]}
+	history = {'train_loss':[], 'test_loss':[], 'toc':[], 'dice':[], 'mse':[]}
 
 	if args.state_file is not None:
 		checkpoint = torch.load(args.state_file)
@@ -64,6 +64,8 @@ def train(args):
 		# Training Data
 		model.train()
 		train_running_loss = 0.0
+		train_dice = 0.0
+		train_mse = 0.0
 		
 		for i, (signals, labels, images) in enumerate(train_loader):
 			print('Epoch {0} of {1}, Batch {2} of {3} [training]...'.format(n+1,args.num_epoch,i+1,num_batches), end='\r', flush=True)
@@ -75,11 +77,15 @@ def train(args):
 			optimizer.zero_grad(set_to_none=True)
 
 			output1, output2 = model(signals)
-			train_loss = ((1-alpha)*dice_loss(output1, labels)) + (alpha*mse(output2, images))
+			tdice = dice_loss(output1, labels)
+			tmse = mse(output2, images)
+			train_loss = ((1-alpha)*tdice) + (alpha*tmse)
 			train_loss.backward()
 			optimizer.step()
 
 			train_running_loss += train_loss.item()
+			train_dice += tdice.item()
+			train_mse += tmse.item()
 
 		before_lr = optimizer.param_groups[0]["lr"]
 		scheduler.step()
@@ -89,6 +95,8 @@ def train(args):
 		# Validation Data
 		model.eval()
 		test_running_loss = 0.0
+		test_dice = 0.0
+		test_mse = 0.0
 
 		with torch.no_grad():
 			for j, (signals, labels, images) in enumerate(test_loader):
@@ -99,19 +107,27 @@ def train(args):
 				images = images.to(DEVICE)
 
 				output1, output2 = model(signals)
-				test_loss = ((1-alpha)*dice_loss(output1, labels)) + (alpha*mse(output2, images))
+				ttdice = dice_loss(output1, labels)
+				ttmse = mse(output2, images)
+				test_loss = ((1-alpha)*ttdice) + (alpha*ttmse)
 
 				test_running_loss += test_loss.item()
+				test_dice += ttdice.item()
+				test_mse += ttmse.item()
 
 		model_train_loss = train_running_loss/len(train_loader)
 		model_test_loss = test_running_loss/len(test_loader)
+		model_dice = train_dice/len(train_loader)
+		model_mse = train_mse/len(train_loader)
 
 		history['train_loss'].append(model_train_loss)
 		history['test_loss'].append(model_test_loss)
+		history['dice'].append(model_dice)
+		history['mse'].append(model_mse)
 
 		toc = time.time() - tic
 		history['toc'].append(toc)
-		print('Epoch {0} of {1}, Train Loss: {2:.4f}, Test Loss: {3:.4f}, Time: {4:.2f} sec'.format(n+1,args.num_epoch,model_train_loss,model_test_loss,toc))
+		print('Epoch {0} of {1}, Train Loss: {2:.4f}, Test Loss: {3:.4f}, Time: {4:.2f} sec, Dice: {5:.4f}, MSE: {6:.4f}'.format(n+1,args.num_epoch,model_train_loss,model_test_loss,toc, model_dice, model_mse))
 
 		if (n % save_frequency == 0): 
 			save_model(args.model_file,model,optimizer,history,'{0:02d}'.format(n))
@@ -120,9 +136,9 @@ def train(args):
 
 	if args.log_file is not None:
 		with open(args.log_file, 'w') as file:
-			file.write('Epoch,Train Loss,Test Loss,Time\n')
+			file.write('Epoch,Train Loss,Test Loss,Time,Dice,MSE\n')
 			for n in range(args.num_epoch):
-				file.write('{0},{1:.4f},{2:.4f},{3:.2f}\n'.format(n+1,history['train_loss'][n],history['test_loss'][n],history['toc'][n]))
+				file.write('{0},{1:.4f},{2:.4f},{3:.2f},{4:.4f},{5:.5f}\n'.format(n+1,history['train_loss'][n],history['test_loss'][n],history['toc'][n],history['dice'][n],history['mse'][n]))
 
 	print(f'Training complete - model saved to {args.model_file}')
 
@@ -147,6 +163,8 @@ def test(args):
 	mse = nn.MSELoss(reduction='mean')
 	model.eval()
 	test_running_loss = 0.0
+	test_dice = 0.0
+	test_mse = 0.0
 	loss = []
 	with torch.no_grad():
 		for i, (signals, labels, images) in enumerate(test_loader):
@@ -158,9 +176,20 @@ def test(args):
 			images = images.to(DEVICE)
 
 			output1, output2 = model(signals)
-			test_loss = dice_loss(output1, labels) + mse(output2, images)
-			loss.append(test_loss)
+
+			ttdice = dice_loss(output1, labels)
+			ttmse = mse(output2, images)
+			test_loss = ((1-alpha)*ttdice) + (alpha*ttmse)
+
 			test_running_loss += test_loss.item()
+			test_dice += ttdice.item()
+			test_mse += ttmse.item()
+
+			loss.append(ttdice)
+
+			test_running_loss += test_loss.item()
+			test_dice += ttdice.item()
+			test_mse += ttmse.item()
 
 			for j in range(output1.shape[0]):
 				label_tensor = output1[j]
@@ -182,7 +211,9 @@ def test(args):
 				file.write('{0},{1:.4f}\n'.format(n+1,loss[n]))
 
 	model_test_loss = test_running_loss/len(test_loader)
-	print('Test Loss: {0:.4f}'.format(model_test_loss))
+	model_dice = test_dice/len(test_loader)
+	model_mse = test_mse/len(test_loader)
+	print('Test Loss: {0:.4f}, Dice: {1:.4f}, MSE: {2:.4f}'.format(model_test_loss, model_dice, model_mse))
 
 #----------------------------------------------------------
 
