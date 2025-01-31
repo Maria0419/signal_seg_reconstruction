@@ -43,7 +43,7 @@ def train(args):
 	optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 	scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 
-	mse = nn.MSELoss()
+	mse = nn.MSELoss(reduction='mean')
 
 	history = {'train_loss':[], 'test_loss':[], 'toc':[]}
 
@@ -73,7 +73,7 @@ def train(args):
 			optimizer.zero_grad(set_to_none=True)
 
 			output1, output2 = model(signals)
-			train_loss = dice_loss(output1, labels) + (mse(output2, images)/(pixels*pixels))
+			train_loss = dice_loss(output1, labels) + (mse(output2, images))
 			train_loss.backward()
 			optimizer.step()
 
@@ -97,7 +97,7 @@ def train(args):
 				images = images.to(DEVICE)
 
 				output1, output2 = model(signals)
-				rain_loss = dice_loss(output1, labels) + mse(output2, images, reduction='mean')
+				train_loss = dice_loss(output1, labels) + mse(output2, images)
 
 				test_running_loss += test_loss.item()
 
