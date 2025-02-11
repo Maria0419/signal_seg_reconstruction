@@ -44,7 +44,7 @@ class SignalDataset(Dataset):
             random_numbers = [random.uniform(0.0, 1.0) for _ in range(len(self.data_list))]
             self.data_list = [self.load_signal(n, random_numbers[idx]) for idx, n in enumerate(self.data_list)]
             self.label_list = [self.load_image(n, random_numbers[idx]) for idx, n in enumerate(self.label_list)]
-            self.image_list = [self.load_image(n, random_numbers[idx]) for idx, n in enumerate(self.image_list)]
+            self.image_list = [self.load_image(n, random_numbers[idx], 'image') for idx, n in enumerate(self.image_list)]
 
 
     def __len__(self):
@@ -59,7 +59,7 @@ class SignalDataset(Dataset):
         if not self.load_first:
             signal = self.load_signal(self.data_list[idx], rand)
             label = self.load_image(label_file, rand)
-            image = self.load_image(image_file, rand)
+            image = self.load_image(image_file, rand, 'image')
 
             return signal, label, image
         else:
@@ -137,9 +137,11 @@ class SignalDataset(Dataset):
 
         return padded_signal.astype(np.float32)
 
-    def load_image(self, filename, rand):
+    def load_image(self, filename, rand, image_type='label'):
         image = cv2.imread(filename)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if image_type == 'image':
+            image = cv2.resize(image, (512, 512), interpolation=cv2.INTER_CUBIC)
 
         if self.noise is not None and rand > 0.5:
             image = np.flip(image, axis=1)
