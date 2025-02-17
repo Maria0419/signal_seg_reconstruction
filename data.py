@@ -149,7 +149,7 @@ class SignalDataset(Dataset):
         image = np.expand_dims(image, axis=2)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)/255 
 
-        if self.noise is not None:
+        if self.noise is not None and image_type == 'image':
             sigma = np.random.uniform(high=self.noise)
             noise = np.random.normal(scale=sigma, size=image.shape)
             image = np.clip(image + noise, 0, 1).astype(np.float32)
