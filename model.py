@@ -91,10 +91,8 @@ class UNETDD(nn.Module):
         self.dd1 = Decoder(nfilter*16, nfilter*8)
         self.dup3 = nn.Upsample(scale_factor=(1, 4),mode='bicubic')
         self.dd2 = Decoder(nfilter*8, nfilter*4)
-        self.dup4 = nn.Upsample(scale_factor=(1, 4),mode='bicubic')
-        self.dd3 = Decoder(nfilter*4, nfilter*2)
 
-        self.output2 = nn.Conv2d(nfilter*2, out_channels, kernel_size=1, padding=0) #1x1 convolution
+        self.output2 = nn.Conv2d(nfilter*4, out_channels, kernel_size=1, padding=0) #1x1 convolution
         self.relu = nn.ReLU()
         
 
@@ -126,10 +124,8 @@ class UNETDD(nn.Module):
         dd1 = self.dd1(dd0, s4up2)
         s3up2 = self.dup3(s3)
         dd2 = self.dd2(dd1, s3up2)
-        s2up = self.dup4(s2)
-        dd3 = self.dd3(dd2, s2up)
 
-        outputs2 = self.output2(dd3)
+        outputs2 = self.output2(dd2)
         outputs2 = self.relu(outputs2)
         
         return outputs1, outputs2
