@@ -2,31 +2,31 @@ clear; close all;
 
 rank = 170;
 
-filename = '../artery_segmentation/nfold1c2f16_out/loss.csv';
+filename = '../artery_segmentation/n1/nfold1/loss.csv';
 loss_rec = readtable(filename);
 
 loss_unetdd = readtable('nfold1a11_out/loss.csv');
 loss_unetdd = sortrows(loss_unetdd, 'Dice', 'descend');
 id = loss_unetdd.Order(rank);
 
-loss_sunet4c = readtable('../signal_segmentation/nfold1c4_out/loss.csv');
+loss_sunet4c = readtable('../signal_segmentation/n1/nfold1/loss.csv');
 
 idx = load('indices.mat');
 nfold1 = sort(idx.parts{2});
 
-path_og = sprintf('../signal_segmentation/dataset_interpooled/img_%04d_image.png',nfold1(id));
+path_og = sprintf('../signal_segmentation/dataset1_interpooled/img_%04d_image.png',nfold1(id));
 og = imread(path_og);
 
-path_label = sprintf('../signal_segmentation/dataset_interpooled/img_%04d_label.png',nfold1(id));
+path_label = sprintf('../signal_segmentation/dataset1_interpooled/img_%04d_label.png',nfold1(id));
 label = imread(path_label);
 
-path_outrec = sprintf('../artery_segmentation/nfold1c2f16_out/output%04d.png',id);
+path_outrec = sprintf('../artery_segmentation/n1/nfold1/output%04d.png',id);
 out_rec = imread(path_outrec);
 
-path_rec = sprintf('../artery_segmentation/dataset_reconstructed/img_%04d_reconstructed.png',nfold1(id));
+path_rec = sprintf('../artery_segmentation/dataset1_reconstructed/img_%04d_reconstructed.png',nfold1(id));
 rec = imread(path_rec);
 
-path_sunet4c = sprintf('../signal_segmentation/nfold1c4_out/output%04d.png',id);
+path_sunet4c = sprintf('../signal_segmentation/n1/nfold1/output%04d.png',id);
 out_sunet4c = imread(path_sunet4c);
 
 path_ddimg = sprintf('nfold1a11_out/output%04d_image.png',id);

@@ -140,8 +140,6 @@ class SignalDataset(Dataset):
     def load_image(self, filename, rand, image_type='label'):
         image = cv2.imread(filename)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        if image_type == 'image':
-            image = cv2.resize(image, (512, 512), interpolation=cv2.INTER_CUBIC)
 
         if self.noise is not None and rand > 0.5:
             image = np.flip(image, axis=1)

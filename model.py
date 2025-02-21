@@ -56,43 +56,52 @@ class Decoder(nn.Module):
         return x
 
 class UNETDD(nn.Module):
-    def __init__(self):
+    def __init__(self, out_c=1):
         super().__init__()
         #Parameters
         inch = 8
         nfilter = 16
-        out_channels = 1
+        out_channels = out_c
 
         #Encoder
-
         self.e1 = Encoder(inch, nfilter, ds=(2,1))
         self.e2 = Encoder(nfilter, nfilter*2)
-        self.e3 = Encoder(nfilter*2, nfilter*4, ds=(2,1))
-        self.e4 = Encoder(nfilter*4, nfilter*8)
-        self.e5 = Encoder(nfilter*8, nfilter*16, ds=(2,1))
+        self.e3 = Encoder(nfilter*2, nfilter*4)
+        self.e4 = Encoder(nfilter*4, nfilter*8, ds=(4,2))
+        self.e5 = Encoder(nfilter*8, nfilter*16, ds=(4,2))
         
         self.b = ConvBlock(nfilter*16, nfilter*32) 
 
         #Decoder1
-        self.up1 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.pool0 = nn.MaxPool2d(kernel_size=(2,1))
         self.d0 = Decoder(nfilter*32, nfilter*16)
-        self.up2 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.pool1 = nn.MaxPool2d(kernel_size=(4,1))
         self.d1 = Decoder(nfilter*16, nfilter*8)
-        self.up3 = nn.Upsample(scale_factor=(1, 4),mode='bicubic')
+        self.pool2 = nn.MaxPool2d(kernel_size=(4,1))
         self.d2 = Decoder(nfilter*8, nfilter*4)
+        self.pool3 = nn.MaxPool2d(kernel_size=(4,1))
+        self.d3 = Decoder(nfilter*4, nfilter*2)
+        self.pool4 = nn.MaxPool2d(kernel_size=(4,1))
+        self.up4 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.d4 = Decoder(nfilter*2, nfilter)
         
-        self.output1 = nn.Conv2d(nfilter*4, out_channels, kernel_size=1, padding=0) #1x1 convolution
+        self.output1 = nn.Conv2d(nfilter, out_channels, kernel_size=1, padding=0) #1x1 convolution
         self.sigmoid = nn.Sigmoid()
 
         #Decoder2
-        self.dup1 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.dpool0 = nn.MaxPool2d(kernel_size=(2,1))
         self.dd0 = Decoder(nfilter*32, nfilter*16)
-        self.dup2 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.dpool1 = nn.MaxPool2d(kernel_size=(4,1))
         self.dd1 = Decoder(nfilter*16, nfilter*8)
-        self.dup3 = nn.Upsample(scale_factor=(1, 4),mode='bicubic')
+        self.dpool2 = nn.MaxPool2d(kernel_size=(4,1))
         self.dd2 = Decoder(nfilter*8, nfilter*4)
-
-        self.output2 = nn.Conv2d(nfilter*4, out_channels, kernel_size=1, padding=0) #1x1 convolution
+        self.dpool3 = nn.MaxPool2d(kernel_size=(4,1))
+        self.dd3 = Decoder(nfilter*4, nfilter*2)
+        self.dpool4 = nn.MaxPool2d(kernel_size=(4,1))
+        self.dup4 = nn.Upsample(scale_factor=(1, 2),mode='bicubic')
+        self.dd4 = Decoder(nfilter*2, nfilter)
+        
+        self.output2 = nn.Conv2d(nfilter, out_channels, kernel_size=1, padding=0) #1x1 convolution
         self.relu = nn.ReLU()
         
 
@@ -106,26 +115,36 @@ class UNETDD(nn.Module):
 
         b = self.b(p5)
 
-        #Decoder1    
-        s5up = self.up1(s5)
+        #Decoder1     
+        s5up = self.pool0(s5)  
         d0 = self.d0(b, s5up)
-        s4up = self.up2(s4)
+        s4up = self.pool1(s4)
         d1 = self.d1(d0, s4up)
-        s3up = self.up3(s3)
+        s3up = self.pool2(s3)
         d2 = self.d2(d1, s3up)
+        s2up = self.pool3(s2)
+        d3 = self.d3(d2, s2up)
+        s1up = self.pool4(s1)
+        s1up = self.up4(s1up)
+        d4 = self.d4(d3, s1up)
         
-        outputs1 = self.output1(d2)
+        outputs1 = self.output1(d4)
         outputs1 = self.sigmoid(outputs1)
 
         #Decoder2
-        s5up2 = self.dup1(s5)
+        s5up2 = self.dpool0(s5)  
         dd0 = self.dd0(b, s5up2)
-        s4up2 = self.dup2(s4)
+        s4up2 = self.dpool1(s4)
         dd1 = self.dd1(dd0, s4up2)
-        s3up2 = self.dup3(s3)
+        s3up2 = self.dpool2(s3)
         dd2 = self.dd2(dd1, s3up2)
+        s2up2 = self.dpool3(s2)
+        dd3 = self.dd3(dd2, s2up2)
+        s1up2 = self.dpool4(s1)
+        s1up2 = self.dup4(s1up2)
+        dd4 = self.dd4(dd3, s1up2)
 
-        outputs2 = self.output2(dd2)
+        outputs2 = self.output2(dd4)
         outputs2 = self.relu(outputs2)
         
         return outputs1, outputs2
