@@ -29,9 +29,9 @@
             "args": [
                 "-job=TEST",
                 "-data_path=../signal_segmentation/dataset",
-                "-test_path=nfold1a11_out",
+                "-test_path=nfold1",
                 "-nfold=1", 
-                "-model_file=nfold1a11_out/nfold1.pth"
+                "-model_file=nfold1/nfold1.pth"
             ]
         }
     ]

@@ -1,11 +1,11 @@
 clear; close all;
 
-rank = 170;
+rank = 120;
 
 filename = '../artery_segmentation/n1/nfold1/loss.csv';
 loss_rec = readtable(filename);
 
-loss_unetdd = readtable('nfold1a11_out/loss.csv');
+loss_unetdd = readtable('nfold1/loss.csv');
 loss_unetdd = sortrows(loss_unetdd, 'Dice', 'descend');
 id = loss_unetdd.Order(rank);
 
@@ -29,10 +29,10 @@ rec = imread(path_rec);
 path_sunet4c = sprintf('../signal_segmentation/n1/nfold1/output%04d.png',id);
 out_sunet4c = imread(path_sunet4c);
 
-path_ddimg = sprintf('nfold1a11_out/output%04d_image.png',id);
+path_ddimg = sprintf('nfold1/output%04d_image.png',id);
 ddimg = imread(path_ddimg);
 
-path_ddsig = sprintf('nfold1a11_out/output%04d_label.png',id);
+path_ddsig = sprintf('nfold1/output%04d_label.png',id);
 ddsig = imread(path_ddsig);
 
 threshold = 220; % Adjust if necessary

@@ -16,7 +16,7 @@ min_learning_rate = 1e-6
 lambda1 = lambda epochs: max(0.98 ** epochs, min_learning_rate/learning_rate)
 save_frequency = 10
 nfilter = 64
-load_first = True
+load_first = False
 alpha = 1.1
 beta = 1
 

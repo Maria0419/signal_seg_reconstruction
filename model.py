@@ -1,10 +1,11 @@
 import torch 
 import torch.nn as nn
 
-def dice_loss(pred,target):
-    numerator = 2 * torch.sum(pred * target)
-    denominator = torch.sum(pred + target)
-    return 1 - (numerator + 1) / (denominator + 1)
+def dice_loss(pred,target,smooth=1):
+    intersection = (pred * target).sum(dim=(2, 3))
+    union = pred.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
+    dice = (2. * intersection + smooth) / (union + smooth)
+    return 1 - dice.mean()
 
 class ConvBlock(nn.Module):
     def __init__(self, in_c, out_c):
